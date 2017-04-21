@@ -1,0 +1,143 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf8" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<title>批量地址</title>
+	<style type="text/css">
+		body, html{width: 100%;height: 100%;margin:0;font-family:"微软雅黑";}
+		#l-map{height:90%;width:100%;}
+		#result{width:100%; font-size:14px;line-height:20px;clear:both;}
+	    #controlBtn,#instructionBtn  {float:left;padding-left:10px;color:#ff6a00;cursor:pointer;}
+		#instructionBtn  {float:right;border:1px solid #ff6a00;padding:5px;margin-right:20px;width:20px;height:20px;text-align:center;line-height:20px;vertical-align:middle;cursor:pointer}
+        #inputarea {text-align:right;}
+	</style>
+    <script type="text/javascript" src="jquery-1.10.2.min.js"></script>
+	<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=WpfELOdRm3YYDj8Uq2O7GoPN"></script>
+</head>
+<body>
+    <div id="args" style="float:left;z-index:999;width:100%;height:auto;">
+	<div id="instructionArea" style="display:none;">
+	 <div id="instructionBtn" style="" onclick="swithInstruction()">X</div>
+<b>使用说明：</b>
+地址解析支持两种数据格式：<br/>
+1、地址<br/>
+2、名称\t地址<i style="color:green;">(\t：是制表符，从EXCEL中复制两列时，自动添加制表符将两列分开)</i><br/>
+输入内容格式1，则地图显示位置标记时，使用地址在地图上进行标记<br/>
+输入内容格式2，则地图显示位置标记时，使用名称在地图上进行标记<br/><br/>
+例如：<br/>
+山东省济南市历城区仲宫镇高而办事处孙家崖村68号<br/>
+兴旺陶鲁超市	山东省济南市高新区兴旺家园门口
+	</div>
+       <div id="inputarea" style=""> 
+           <textarea id="address" style="height:300px;width:100%">使用说明：
+地址解析支持两种数据格式：
+1、地址
+2、名称\t地址
+输入内容格式1，则地图显示位置标记时，使用地址在地图上进行标记
+输入内容格式2，则地图显示位置标记时，使用名称在地图上进行标记
+例如：
+山东省济南市历城区仲宫镇高而办事处孙家崖村68号
+兴旺陶鲁超市	山东省济南市高新区兴旺家园门口</textarea>      
+           <hr />
+           
+       </div>
+        <div style="text-align:right;">
+           
+			<div id="controlBtn" onclick="swith()">△△△ 隐藏地址输入框 △△△</div>
+			<input type="button" value="清除标记" onclick="ClearnMarkers()" />
+            <input type="button" value="批量地址解析" onclick="BeginSearch()" /></div>
+        
+    </div>
+	<div id="l-map"></div>
+    <div>
+        地理位置解析结果：
+           <div id="result"></div>
+    </div>
+</body>
+</html>
+<script type="text/javascript">
+    var inputarea = $("#inputarea");
+    var controlBtn = $("#controlBtn");    
+	
+	var instructionArea = $("#instructionArea");
+    var instructionBtn = $("#instructionBtn");
+	//显示或隐藏 使用说明
+	function swithInstruction() {
+        if (instructionArea.css("display") == "none") {
+            instructionArea.show();
+            instructionBtn.text("△△△ 隐藏使用说明 △△△");
+        }
+        else {
+            instructionArea.hide();
+            instructionBtn.text("▽▽▽ 显示使用说明 ▽▽▽");
+        }
+    }
+	//显示或隐藏 地址输入框
+    function swith() {
+        if (inputarea.css("display") == "none") {
+            inputarea.show();
+            controlBtn.text("△△△ 隐藏地址输入框 △△△");
+        }
+        else {
+            inputarea.hide();
+            controlBtn.text("▽▽▽ 显示地址输入框 ▽▽▽");
+        }
+    }
+	if(typeof(BMap)=="undefined"){
+		alert("本功能借助百度地图实现，仅在连接互联网时可用！");
+	}
+    // 百度地图API功能
+    var map = new BMap.Map("l-map");
+    map.centerAndZoom(new BMap.Point(117.00563, 36.679244), 8);
+    map.enableScrollWheelZoom(true);
+	map.addControl(new BMap.NavigationControl());    
+	map.addControl(new BMap.ScaleControl());    
+	map.addControl(new BMap.OverviewMapControl());    
+	map.addControl(new BMap.MapTypeControl());    
+	map.setCurrentCity("济南");
+    var index = 0;
+    var myGeo = new BMap.Geocoder();
+    var adds = [
+		"济南市八一立交桥"
+    ];
+    var inputarea = $("#inputarea");
+    var controlBtn = $("#controlBtn");
+	function BeginSearch(){
+		index = 0;
+		bdGEO();
+	}
+    function bdGEO() {
+        //读取输入的地址
+        adds = $("#address").val().split("\n");
+        inputarea.hide();
+        controlBtn.text("▽▽▽ 显示输入框 ▽▽▽");
+        
+        var addr = adds[index];
+        geocodeSearch(addr);
+        index++;
+    }
+    function geocodeSearch(addr) {
+        if (index < adds.length) {
+            setTimeout(window.bdGEO, 400);
+        }
+		var addrInfo = addr.split("\t");
+        myGeo.getPoint(addrInfo.length>1?addrInfo[1]:addrInfo[0], function (point) {
+            if (point) {
+                document.getElementById("result").innerHTML += index + "、" + addr + ":" + point.lng + "," + point.lat + "</br>";
+                var address = new BMap.Point(point.lng, point.lat);
+                addMarker(address, new BMap.Label(index + ":" + addr.split("\t")[0], { offset: new BMap.Size(20, -10) }));
+            }
+        }, "济南市");
+    }
+    // 编写自定义函数,创建标注
+    function addMarker(point, label) {
+        var marker = new BMap.Marker(point);
+        map.addOverlay(marker);
+        marker.setLabel(label);
+    }
+	function ClearnMarkers(){
+		$("#address").val("");
+		map.clearOverlays();
+	}
+</script>
