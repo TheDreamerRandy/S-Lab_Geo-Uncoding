@@ -12,7 +12,7 @@
         #inputarea {text-align:right;;font-size:250%}
         .loading{ 
     background:#FF6100; //设置进度条的颜色 
-    height:5px; //设置进度条的高度 
+    height:20px; //设置进度条的高度 
     position:fixed; //设定进度条跟随屏幕滚动 
     top:0; //将进度条固定在页面顶部 
     z-index:99999  //提高进度条的优先层级，避免被其他层遮挡 
@@ -20,6 +20,7 @@
 	</style>
      <script type="text/javascript" src="jquery-1.10.2.min.js"></script>
 	<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=WpfELOdRm3YYDj8Uq2O7GoPN"></script>
+    <script type="text/javascript" src="index.js"></script>
 </head>
 
 <body>
@@ -32,9 +33,10 @@
     </div>
     </hr>>
     <div style ="text-align=left;" >
-    		<input type="button" value="输入地址" onclick="fileSelect3(e)"/>
+    		<input type="button" value="输入地址" onclick="presentArea()"/>
             <input type="button" id="import" value="选择本地文件"/>
              </div>  
+    <div class="loading"></div> 
     <div id="instructionArea" style="height:130px;width: 100%">
 	 <div id="instructionBtn" style="" onclick="swithInstruction()">隐藏使用说明</div>
 	 <strong>使用说明：</strong> 地址解析支持两种数据格式：<br>
@@ -56,7 +58,6 @@
         地理位置解析结果：
            <div id="result"></div>
     </div>
-    <div class="loading"></div> 
 </body>
 </html>
 
@@ -144,8 +145,9 @@
         myGeo.getPoint(addrInfo.length>1?addrInfo[1]:addrInfo[0], function (point) {
             if (point) {
                 var x = index/adds.length;
-                loading.animate({'width':x%},50);
-                document.getElementById("result").innerHTML += index + "、" + addr + "GCJ02"+":" + point.lng + "," + point.lat + "     WGS-84"+"</br>";
+                loading.animate({'width':x},50);
+                var gcj02tobd09 = coordtransform.gcj02tobd09(point.lng,point.lat);
+                document.getElementById("result").innerHTML += index + "、" + addr + "GCJ02"+":" + point.lng + "," + point.lat + "     WGS-84："+gcj02tobd09+"</br>";
                 var address = new BMap.Point(point.lng, point.lat);
                 addMarker(address, new BMap.Label(index + ":" + addr.split("\t")[0], { offset: new BMap.Size(20, -10) }));
             }
