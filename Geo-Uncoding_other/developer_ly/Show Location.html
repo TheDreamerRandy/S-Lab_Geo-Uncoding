@@ -55,8 +55,11 @@
 兴旺陶鲁超市	山东省济南市高新区兴旺家园门口</textarea>    
 </div>>
 <div>
+        <form onsubmit="download('TheResult.txt')">
         地理位置解析结果：
-           <div id="result"></div>
+           <div id="result"  name="text"></div>
+           <input type="submit" value="Download">
+           </form>
     </div>
 </body>
 </html>
@@ -68,6 +71,7 @@
 	var instructionArea = $("#instructionArea");
     var instructionBtn = $("#instructionBtn");
     var loading =$(".loading");
+    var text;
 	//显示或隐藏 使用说明
 	function presentArea(){
          if (inputarea.css("display") == "none") {
@@ -101,6 +105,18 @@
         }
     }
 
+function download(filename) {
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  element.setAttribute('download', filename);
+
+  element.style.display = 'none';
+  document.body.appendChild(element);
+
+  element.click();
+
+  document.body.removeChild(element);
+}
 
 
     if(typeof(BMap)=="undefined"){
@@ -117,6 +133,8 @@
     map.setCurrentCity("济南");
     var index = 0;
     var myGeo = new BMap.Geocoder();
+    var myGeo_2 = new BMap.Geocoder("gcj02ll");
+    var bd;
     var adds = [
         "济南市八一立交桥"
     ];
@@ -126,6 +144,7 @@
         index = 0;
         bdGEO();
     }
+
     function bdGEO() {
         //读取输入的地址
         adds = $("#address").val().split("\n");
@@ -142,14 +161,20 @@
             setTimeout(window.bdGEO, 400);
         }
         var addrInfo = addr.split("\t");
-        myGeo.getPoint(addrInfo.length>1?addrInfo[1]:addrInfo[0], function (point) {
-            if (point) {
+        myGeo.getPoint(addrInfo.length>1?addrInfo[1]:addrInfo[0],function (point) {
+                    if(point){
+                        bd="BD-09"+":" + point.lng + "," + point.lat 
+                        var address = new BMap.Point(point.lng, point.lat);
+                         addMarker(address, new BMap.Label(index + ":" + addr.split("\t")[0], { offset: new BMap.Size(20, -10) }));
+                    }
+                })
+        myGeo_2.getPoint(addrInfo.length>1?addrInfo[1]:addrInfo[0],function (point2) {
+            if (point2) {
                 var x = index/adds.length;
                 loading.animate({'width':x},50);
-                var gcj02tobd09 = coordtransform.gcj02tobd09(point.lng,point.lat);
-                document.getElementById("result").innerHTML += index + "、" + addr + "GCJ02"+":" + point.lng + "," + point.lat + "     WGS-84："+gcj02tobd09+"</br>";
-                var address = new BMap.Point(point.lng, point.lat);
-                addMarker(address, new BMap.Label(index + ":" + addr.split("\t")[0], { offset: new BMap.Size(20, -10) }));
+                var gcj02towgs84 = coordtransform.gcj02towgs84(point2.lng,point2.lat);
+                text =document.getElementById("result").innerHTML += index + "、" + addr +"  " +bd+"  " + "GCJ-02"+":"+ point2.lng + "," + point2.lat+ "  " +"WGS-84："+gcj02towgs84+"</br>"; 
+                
             }
         }, "济南市");
     }

@@ -17,6 +17,15 @@ function handleFileSelect(evt) {
     document.getElementById('list').innerHTML = '<ul>' + output.join('') + '</ul>';
 }
 
+function DownLoad()
+{
+    var blob = new Blob(["Hello World"]);
+    var a = document.createElement("a");
+    a.href = window.URL.createObjectURL(blob);
+    a.download = "hello-world.txt";
+    a.textContent = "Download Hello World!";
+    body.appendChild(a);
+}
 window.onload = function() {
 
     // Check for the various File API support.
